@@ -24,7 +24,7 @@ from typing import Optional
 #  ARCHITECTURE CONSTANTS
 # ─────────────────────────────────────────────────────────────
 _N_IN   = 8
-_N_HID  = 16   # increased from 14 — more expressive hidden layer
+_N_HID  = 16   
 _N_OUT  = 2
 _CLIP   = 500.0
 
@@ -70,7 +70,7 @@ class CarBrain:
             self.W2 = np.random.uniform(-lim2, lim2, (_N_HID, _N_OUT))
             self.b2 = np.zeros(_N_OUT)
 
-        self._fitness_cache: Optional[float] = None   # used by selector
+        self._fitness_cache: Optional[float] = None   
 
     # ─────────────────────────────────────────────────────────
     #  FORWARD PASS  (single car)
@@ -89,8 +89,8 @@ class CarBrain:
             action[0]  steer    ∈ [-1, +1]   (left … right)
             action[1]  throttle ∈ [ 0,  1]   (brake … full gas)
         """
-        h  = _tanh(sensors @ self.W1 + self.b1)          # hidden: tanh
-        a2 = _sigmoid(h      @ self.W2 + self.b2)         # output: sigmoid
+        h  = _tanh(sensors @ self.W1 + self.b1)          
+        a2 = _sigmoid(h      @ self.W2 + self.b2)         
         return np.array([(a2[0] - 0.5) * 2.0, a2[1]],
                         dtype=np.float64)
 
@@ -128,8 +128,8 @@ class CarBrain:
             b2[:,    k] = br.b2
 
         # (N, HID) — tanh hidden layer
-        pre_h = (np.einsum('ni,ijn->nj', sensor_matrix, W1)    # (N, HID)
-                 + b1.T)                                         # broadcast
+        pre_h = (np.einsum('ni,ijn->nj', sensor_matrix, W1)   
+                 + b1.T)                                         
         h = _tanh(pre_h)
 
         # (N, OUT) — sigmoid output layer
@@ -138,8 +138,8 @@ class CarBrain:
         a2 = _sigmoid(pre_o)
 
         actions = np.empty((N, 2), dtype=np.float64)
-        actions[:, 0] = (a2[:, 0] - 0.5) * 2.0   # steer:    −1 … +1
-        actions[:, 1] =  a2[:, 1]                  # throttle:  0 …  1
+        actions[:, 0] = (a2[:, 0] - 0.5) * 2.0  
+        actions[:, 1] =  a2[:, 1]                  
         return actions
 
     # ─────────────────────────────────────────────────────────
@@ -199,7 +199,6 @@ class CarBrain:
         self._fitness_cache = None
 
     def copy_from(self, other: 'CarBrain'):
-        """Deep-copy all weight arrays from *other* into self."""
         self.W1 = other.W1.copy()
         self.b1 = other.b1.copy()
         self.W2 = other.W2.copy()
@@ -256,7 +255,5 @@ class CarBrain:
                 f'  |W2|={s["W2"]["mean"]:.3f}>')
 
 
-# ─────────────────────────────────────────────────────────────
-#  LEGACY ALIAS
-# ─────────────────────────────────────────────────────────────
+
 RedeNeuralCarrinho = CarBrain

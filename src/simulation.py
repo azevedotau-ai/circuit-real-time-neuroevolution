@@ -1,6 +1,3 @@
-# Simulation engine — no UI dependencies.
-# SimulatorBase manages the training loop with a genetic algorithm.
-
 import numpy as np
 import json
 import os
@@ -66,7 +63,7 @@ class SimulatorBase:
         self.global_lap_record_gen: Optional[int] = None
         self.winner: Optional[int]          = None
 
-        # Adaptive mutation state
+
         self.stagnation_gens: int           = 0
         self._last_best_fitness: float      = 0.0
         self._best_cl_index: int            = 0
@@ -122,13 +119,13 @@ class SimulatorBase:
     #  INITIALISATION
     # ─────────────────────────────────────────────────────────
     def _init_population(self, brains: Optional[list] = None):
-        """(Re-)create car and brain lists, optionally seeding from existing brains."""
+
         n = self.population_size
         self.cars   = [AICar(i, n) for i in range(n)]
         self.brains = brains if brains else [CarBrain() for _ in range(n)]
 
     def iniciar_tentativa(self):
-        """Reset all cars to spawn positions for a new generation attempt."""
+
         for car in self.cars:
             car.reset()
         self.current_frame = 0
@@ -149,7 +146,7 @@ class SimulatorBase:
         alive_indices: list[int]       = []
         alive_sensors: list[np.ndarray] = []
 
-        # ── Phase 1: sensors, pre-checks, stagnation ─────────
+
         for idx, car in enumerate(self.cars):
             if not car.alive:
                 continue
@@ -174,24 +171,24 @@ class SimulatorBase:
             alive_indices.append(idx)
             alive_sensors.append(sensors)
 
-        # ── Phase 2: batched neural forward pass ─────────────
+
         if alive_indices:
-            sensor_matrix = np.stack(alive_sensors)                         # (N, 8)
+            sensor_matrix = np.stack(alive_sensors)                        
             active_brains = [self.brains[i] for i in alive_indices]
-            actions_batch = CarBrain.forward_batch(active_brains, sensor_matrix)  # (N, 2)
+            actions_batch = CarBrain.forward_batch(active_brains, sensor_matrix)  
 
             for k, idx in enumerate(alive_indices):
                 car    = self.cars[idx]
                 action = actions_batch[k]
 
                 car.last_action = action
-                car.step(action)                          # physics + lap + speed score
+                car.step(action)                          
 
                 self._update_lap_record(car)
                 self._apply_progress_reward(car, rec_cfg)
                 car.check_collision()
 
-                # Wrong-way frames: clamp score to pre-frame value
+
                 if car.frame_state.get('wrong_way') and hasattr(car, '_score_frame_start'):
                     car.score = min(car.score, car._score_frame_start)
 
@@ -251,10 +248,9 @@ class SimulatorBase:
         vel_norm   = car.speed / CONFIG['cars']['max_speed']
         min_sensor = float(sensors[:7].min())
 
-        # Centreline reward
+
         car.score += min_sensor * vel_norm * rec_cfg['center_weight']
 
-        # Wall proximity penalty (frontal cone: sensors 2–4)
         if car.laps > 0:
             frontal_min = float(sensors[2:5].min())
             threshold   = CONFIG['track']['track_width'] / 15.0
@@ -266,7 +262,7 @@ class SimulatorBase:
                 _log_event_once(car, f'−{penalty:.2f} Wall!', _COR['red'])
 
     def _update_lap_record(self, car: AICar):
-        """Update global lap-time record when a car completes a faster lap."""
+
         if not car.frame_state.get('lap') or car.best_lap_frames is None:
             return
         t = car.best_lap_frames
@@ -300,7 +296,7 @@ class SimulatorBase:
     #  GENERATION EVOLUTION
     # ─────────────────────────────────────────────────────────
     def evoluir_geracao(self):
-        """Rank, select, cross and mutate to produce the next generation."""
+
         fitness  = self._adjusted_fitness()
         best     = float(max(fitness))
         avg      = float(np.mean(fitness))
@@ -310,13 +306,13 @@ class SimulatorBase:
         if best > self.all_time_best_fitness:
             self.all_time_best_fitness = best
 
-        # Track record by centerline advancement (secondary stagnation signal)
+       
         best_cl = max(c.max_cl_index for c in self.cars)
         cl_improved = best_cl > self._best_cl_index
         if cl_improved:
             self._best_cl_index = best_cl
 
-        # Stagnation counter
+      
         threshold_improve = self._last_best_fitness * 1.005
         if best > threshold_improve or cl_improved:
             self.stagnation_gens     = 0
@@ -324,10 +320,10 @@ class SimulatorBase:
         else:
             self.stagnation_gens += 1
 
-        # Average laps this generation
+        
         self.avg_laps_gen = float(np.mean([c.laps for c in self.cars]))
 
-        # Update global lap record from this generation
+
         lap_times = [c.best_lap_frames for c in self.cars if c.best_lap_frames is not None]
         if lap_times:
             gen_best = min(lap_times)
@@ -335,12 +331,12 @@ class SimulatorBase:
                 self.global_lap_record     = gen_best
                 self.global_lap_record_gen = self.generation + 1
 
-        # Mutation schedule
+
         rate, n_random, top_n, mode = self._mutation_params()
         self.current_mut_rate = rate
         self.mutation_mode    = mode
 
-        # Build next generation
+
         ranked      = np.argsort(fitness)[::-1][:top_n]
         new_brains  = self._build_next_generation(ranked, rate, n_random)
         self._init_population(brains=new_brains)
@@ -415,7 +411,7 @@ class SimulatorBase:
             child  = CarBrain()
             child.copy_from(self.brains[p1_idx])
 
-            # 50 % chance of crossover with a second parent
+
             if n_elite >= 2 and np.random.rand() < 0.5:
                 p2_idx = p1_idx
                 while p2_idx == p1_idx:
@@ -473,10 +469,9 @@ class SimulatorBase:
 #  UTILITY
 # ─────────────────────────────────────────────────────────────
 def _log_event_once(car: AICar, message: str, color: str):
-    """Append event to car log only if the last event differs (avoids flood)."""
     if not car.events or car.events[-1][0] != message:
         car.events.append((message, color))
 
 
-# Legacy alias
+
 SimuladorBase = SimulatorBase

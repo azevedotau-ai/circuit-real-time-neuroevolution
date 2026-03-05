@@ -1,5 +1,3 @@
-# Circuit geometry, SDF, car physics and simulation entities.
-# This module has no UI or rendering dependencies.
 
 import sys
 import numpy as np
@@ -17,7 +15,6 @@ log = logging.getLogger(__name__)
 #  RESOURCE PATH  (dev + PyInstaller)
 # ─────────────────────────────────────────────────────────────
 def _resource_path(relative: str) -> str:
-    """Absolute path that works both in development and PyInstaller bundles."""
     base = getattr(sys, '_MEIPASS',
                    os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
     return os.path.join(base, relative)
@@ -33,7 +30,7 @@ def load_config() -> dict:
 
 
 CONFIG = load_config()
-_COR   = CONFIG['ui_colors']   # renamed key (english config)
+_COR   = CONFIG['ui_colors']  
 
 
 # ─────────────────────────────────────────────────────────────
@@ -52,7 +49,7 @@ def _load_track_json() -> dict:
 
 
 def _key(d: dict, *candidates, default=None):
-    """Return the first matching key from d, supporting en/pt-BR aliases."""
+   
     for k in candidates:
         if k in d:
             return d[k]
@@ -61,17 +58,17 @@ def _key(d: dict, *candidates, default=None):
 
 _tj = _load_track_json()
 
-# Control points (closed loop — last == first allowed)
+
 _raw_pts      = _key(_tj, 'control_points', 'pontos_controle', default=[])
 _CTRL_POINTS  = np.array(_raw_pts, dtype=np.float64)
 _NOME_PISTA   = _key(_tj, 'name', 'nome', default='Track')
 _TRACK_WIDTH  = float(_key(_tj, 'track_width', 'largura_pista', default=1.8))
 
-# Inject into CONFIG
-CONFIG.setdefault('track', {})['track_width'] = _TRACK_WIDTH
-CONFIG.setdefault('pista', {})['largura_pista'] = _TRACK_WIDTH  # legacy compat
 
-# Start line config
+CONFIG.setdefault('track', {})['track_width'] = _TRACK_WIDTH
+CONFIG.setdefault('pista', {})['largura_pista'] = _TRACK_WIDTH  
+
+
 _sl = _key(_tj, 'start', 'largada', default={})
 CONFIG.setdefault('start_line', {}).update({
     'x':          float(_key(_sl, 'x',              default=0.0)),
@@ -81,12 +78,12 @@ CONFIG.setdefault('start_line', {}).update({
     'height':     0.4,
     'num_stripes': 14,
 })
-CONFIG.setdefault('linha_largada', CONFIG['start_line'])  # legacy alias
+CONFIG.setdefault('linha_largada', CONFIG['start_line'])  
 CONFIG['cars']['initial_angle'] = float(
     _key(_sl, 'car_angle_deg', 'angulo_carro_graus', default=0.0))
-CONFIG['carros'] = CONFIG['cars']  # legacy alias
+CONFIG['carros'] = CONFIG['cars']  
 
-# Finish line config
+
 _fl = _key(_tj, 'finish', 'chegada', default=_sl)
 CONFIG.setdefault('finish_line', {}).update({
     'x':      float(_key(_fl, 'x',              default=CONFIG['start_line']['x'])),
@@ -96,7 +93,7 @@ CONFIG.setdefault('finish_line', {}).update({
     'height': 0.4,
     'num_stripes': 14,
 })
-CONFIG.setdefault('linha_chegada', CONFIG['finish_line'])  # legacy alias
+CONFIG.setdefault('linha_chegada', CONFIG['finish_line']) 
 
 print(f'[track.json]  "{_NOME_PISTA}"  |  '
       f'{len(_CTRL_POINTS)} control pts  |  width {_TRACK_WIDTH:.3f}')
@@ -111,7 +108,7 @@ def catmull_rom(pts: np.ndarray, n_seg: int = 40) -> np.ndarray:
     Expects pts[0] == pts[-1] (closed loop) or any array of ≥4 points.
     Returns (N * n_seg, 2) array.
     """
-    n   = len(pts) - 1   # number of segments (pts[-1] == pts[0] for closed)
+    n   = len(pts) - 1   
     ts  = np.linspace(0, 1, n_seg, endpoint=False)
     tt  = ts * ts
     ttt = tt * ts
@@ -138,17 +135,17 @@ _CENTERLINE: np.ndarray = catmull_rom(_CTRL_POINTS)  # (N, 2)
 _CL_X = np.append(_CENTERLINE[:, 0], _CENTERLINE[0, 0])
 _CL_Y = np.append(_CENTERLINE[:, 1], _CENTERLINE[0, 1])
 
-# Cumulative arc-length along centerline (for progress fraction)
+
 _CL_DELTAS    = np.sqrt(np.diff(_CL_X)**2 + np.diff(_CL_Y)**2)
 _CL_ARC       = np.concatenate([[0.0], np.cumsum(_CL_DELTAS)])
 _CL_TOTAL_LEN = float(_CL_ARC[-1])
 
-# Per-segment tangent directions (unit vectors)
+
 _CL_TX = np.diff(_CL_X); _CL_TY = np.diff(_CL_Y)
 _CL_TM = np.maximum(np.sqrt(_CL_TX**2 + _CL_TY**2), 1e-12)
 _CL_TX /= _CL_TM;  _CL_TY /= _CL_TM
 
-# Track viewport
+
 _PAD_X, _PAD_Y = 6.0, 3.0
 _TRACK_XLIM = (float(_CL_X.min() - _PAD_X), float(_CL_X.max() + _PAD_X))
 _TRACK_YLIM = (float(_CL_Y.min() - _PAD_Y), float(_CL_Y.max() + _PAD_Y))
@@ -205,7 +202,7 @@ def point_on_track(x: float, y: float) -> bool:
         return False
     return float(_SDF_GRID[yi, xi]) <= _HW2
 
-# Legacy alias
+
 ponto_dentro_pista = point_on_track
 
 
@@ -222,7 +219,7 @@ def points_on_track_batch(xs: np.ndarray, ys: np.ndarray) -> np.ndarray:
     d2[valid] = _SDF_GRID[yi[valid], xi[valid]]
     return d2 <= _HW2
 
-# Legacy alias
+
 _multiponto_dentro_pista = points_on_track_batch
 
 
@@ -264,7 +261,7 @@ def track_tangent(x: float, y: float) -> np.ndarray:
     idx = int(np.argmin(d2))
     return np.array([_CL_TX[idx], _CL_TY[idx]], dtype=np.float64)
 
-# Legacy alias
+
 calcular_tangente_pista = track_tangent
 
 
@@ -298,7 +295,7 @@ def generate_track_borders() -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.nda
     ix = _CENTERLINE[:, 0] - hw * ty;  iy = _CENTERLINE[:, 1] + hw * tx
     return ox, oy, ix, iy
 
-# Legacy aliases
+
 gerar_contornos_pista = generate_track_borders
 
 
@@ -322,7 +319,7 @@ def crosses_finish_line(x0: float, y0: float, x1: float, y1: float) -> bool:
     x0l, y0l = _local(x0, y0)
     x1l, y1l = _local(x1, y1)
 
-    # No crossing if both on same side (or equal)
+
     if y0l * y1l > 0 or y0l == y1l:
         return False
 
@@ -330,7 +327,7 @@ def crosses_finish_line(x0: float, y0: float, x1: float, y1: float) -> bool:
     x_cross = x0l + t * (x1l - x0l)
     return bool(abs(x_cross) <= fl['width'] / 2.0)
 
-# Legacy alias
+
 cruza_linha_chegada = crosses_finish_line
 
 
@@ -356,7 +353,7 @@ def spawn_position(car_index: int, total_cars: int
             cy + x_loc*sin_r + y_loc*cos_r,
             CONFIG['cars']['initial_angle'])
 
-# Legacy alias
+
 calcular_posicao_inicial_carro = spawn_position
 
 
@@ -428,7 +425,7 @@ class AICar:
         # Trailing state
         self._score_window = deque(maxlen=cfg_pen['continuous_loss_window'])
         self.last_action   = np.array([0.0, 0.5], dtype=np.float32)
-        self._frame_state  = {}   # init directly to avoid property getter before set
+        self._frame_state  = {}   
         self.events        = deque(maxlen=12)
         self._cached_sensors: Optional[np.ndarray] = None
 
@@ -459,7 +456,7 @@ class AICar:
         rads  = np.radians(self.angle + self._SENSOR_ANGLES)
         steps = self._SENSOR_STEPS
 
-        sx = np.float32(self.x) + np.cos(rads)[:, None] * steps   # (7, S)
+        sx = np.float32(self.x) + np.cos(rads)[:, None] * steps   
         sy = np.float32(self.y) + np.sin(rads)[:, None] * steps
 
         inside = points_on_track_batch(sx.ravel(), sy.ravel()).reshape(7, self._N_STEPS)
@@ -618,7 +615,7 @@ class AICar:
         if dot < threshold:
             pen = CONFIG['penalties']['wrong_way_penalty']
             if self.laps == 0:
-                # Pre-lap: freeze speed instead of applying points penalty
+
                 self.speed = 0.0
             else:
                 self.score -= pen
@@ -627,11 +624,11 @@ class AICar:
     # ── Near-wall penalty ─────────────────────────────────────
     def _check_near_wall(self):
         if self.laps == 0:
-            return  # locked pre-lap
+            return  
 
         dist_to_cl = distance_to_centerline(self.x, self.y)
         hw         = _TRACK_WIDTH / 2.0
-        # Penalty ramps up as the car approaches the wall in the outer 25 %
+
         proximity  = (dist_to_cl - hw * 0.75) / (hw * 0.25)
         if proximity > 0:
             pen = CONFIG['penalties']['near_wall_penalty'] * min(proximity, 1.0)
@@ -722,5 +719,5 @@ class AICar:
                 f'score={self.score:.1f}  alive={self.alive}>')
 
 
-# Legacy class alias
+
 CarrinhoIA = AICar

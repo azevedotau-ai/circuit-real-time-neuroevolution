@@ -1,6 +1,3 @@
-# Visualization layer — all rendering via matplotlib.
-# LearningSimulator extends SimulatorBase with the window and real-time loop.
-
 import time
 import numpy as np
 import matplotlib.pyplot as plt
@@ -18,7 +15,7 @@ from .track import (
     _TRACK_XLIM, _TRACK_YLIM, _NOME_PISTA,
     gerar_contornos_pista,
 )
-from .simulation import SimulatorBase, SimuladorBase
+from .simulation import SimulatorBase
 from .neural_network import _N_IN, _N_HID, _N_OUT
 
 
@@ -64,11 +61,9 @@ _UI = {
     'purple':                                   '#7c4dff',
 }
 
-# Module-level scale — set by LearningSimulator._build_figure, used by helpers
 _SCALE = 1.0
 
 def _fs(base):
-    """Scale a base font size by the current screen scale factor."""
     return max(4.5, base * _SCALE)
 
 
@@ -79,6 +74,7 @@ def _draw_and_remove(ax, artist):
     ax.add_artist(artist)
     ax.draw_artist(artist)
     artist.remove()
+
 
 def _text(ax, x, y, s, *, fs=8, fw='normal', color=None, ha='left', va='top',
           transform=None, zorder=5, alpha=1.0, glow=False, family='monospace'):
@@ -92,6 +88,7 @@ def _text(ax, x, y, s, *, fs=8, fw='normal', color=None, ha='left', va='top',
                 fontfamily=family, path_effects=pe_list if glow else None)
     ax.draw_artist(t); t.remove()
 
+
 def _hline(ax, y, xmin=0.0, xmax=1.0, color=None, lw=0.5, alpha=0.4, transform=None):
     color = color or _UI['border']
     transform = transform or ax.transAxes
@@ -99,12 +96,14 @@ def _hline(ax, y, xmin=0.0, xmax=1.0, color=None, lw=0.5, alpha=0.4, transform=N
                transform=transform, zorder=3)
     ax.add_line(l); ax.draw_artist(l); l.remove()
 
+
 def _vline(ax, x, ymin=0.0, ymax=1.0, color=None, lw=0.5, alpha=0.4, transform=None):
     color = color or _UI['border']
     transform = transform or ax.transAxes
     l = Line2D([x, x], [ymin, ymax], color=color, lw=lw, alpha=alpha,
                transform=transform, zorder=3)
     ax.add_line(l); ax.draw_artist(l); l.remove()
+
 
 def _rect(ax, xy, w, h, fc=None, ec='none', lw=0.8, alpha=1.0,
           transform=None, zorder=4, radius=None):
@@ -121,9 +120,9 @@ def _rect(ax, xy, w, h, fc=None, ec='none', lw=0.8, alpha=1.0,
                       alpha=alpha, transform=transform, zorder=zorder, clip_on=False)
     ax.add_patch(p); ax.draw_artist(p); p.remove()
 
+
 def _pill(ax, x, y, w, h, *, fc=None, ec=None, lw=1.0, alpha=0.9,
           transform=None, zorder=10):
-    """Rounded pill / badge."""
     fc = fc or _UI['card']
     ec = ec or _UI['border']
     transform = transform or ax.transAxes
@@ -134,11 +133,13 @@ def _pill(ax, x, y, w, h, *, fc=None, ec=None, lw=1.0, alpha=0.9,
                        clip_on=False)
     ax.add_patch(p); ax.draw_artist(p); p.remove()
 
+
 def _accent_bar(ax, x, y, h, color=None, transform=None, zorder=11):
-    """Thin vertical accent strip on left edge of a card."""
+
     color = color or _UI['accent']
     _rect(ax, (x, y), 0.004, h, fc=color, alpha=0.8,
           transform=transform or ax.transAxes, zorder=zorder)
+
 
 def _section_header(ax, x, y, label, color=None):
     color = color or _UI['text3']
@@ -152,12 +153,12 @@ def _section_header(ax, x, y, label, color=None):
 # ─────────────────────────────────────────────────────────────
 def _draw_gauge(ax, cx, cy, r, value, *, color=None, bg_color=None,
                 label='', sublabel='', transform=None, zorder=6):
-    """Arc-style gauge rendered on ax data coords."""
+    
     color    = color    or _UI['accent']
     bg_color = bg_color or _UI['inactive']
     transform = transform or ax.transAxes
-    start, end = 210, -30          # sweep = 240°
-    sweep = (end - start) * value  # negative → CW
+    start, end = 210, -30          
+    sweep = (end - start) * value  
 
     bg_arc = Arc((cx, cy), 2*r, 2*r, angle=0,
                  theta1=end, theta2=start,
@@ -183,12 +184,11 @@ def _draw_gauge(ax, cx, cy, r, value, *, color=None, bg_color=None,
 #  MAIN CLASS
 # ─────────────────────────────────────────────────────────────
 class LearningSimulator(SimulatorBase):
-    """SimulatorBase + rich matplotlib real-time visualisation (blit)."""
 
     def __init__(self):
         super().__init__()
 
-        # UI state
+  
         self._bg                 = None
         self._bg_refresh_pending = False
         self._frame_count        = 0
@@ -201,7 +201,7 @@ class LearningSimulator(SimulatorBase):
         self._fps_samples        = []
         self._last_frame_time    = time.time()
         self._generation_start   = time.time()
-        self._ghost_trail        = []   # (x, y, alpha) best-car trail
+        self._ghost_trail        = []   
         self._MAX_TRAIL          = 80
         self._show_trail         = True
 
@@ -224,7 +224,7 @@ class LearningSimulator(SimulatorBase):
             'font.family':       'monospace',
         })
 
-        # ── Detect screen size ────────────────────────────────────────────
+       
         try:
             import tkinter as _tk
             _r = _tk.Tk(); _r.withdraw()
@@ -235,37 +235,36 @@ class LearningSimulator(SimulatorBase):
             SCR_W, SCR_H = 1920, 1080
 
         DPI = 96
-        FW  = SCR_W / DPI          # figure width  in inches (full screen)
-        FH  = SCR_H / DPI          # figure height in inches (full screen)
+        FW  = SCR_W / DPI         
+        FH  = SCR_H / DPI          
         self._dpi = DPI
         self._fig_px_w = SCR_W
         self._fig_px_h = SCR_H
 
         self.fig = plt.figure(figsize=(FW, FH), facecolor=_UI['bg'], dpi=DPI)
 
-        # ── All positions in PIXELS then converted to fractions ───────────
-        # This guarantees exact pixel-perfect gaps regardless of resolution.
+       
         W, H = SCR_W, SCR_H
-        def f(x, y, w, h):   # pixel rect → [left, bottom, width, height] fractions
+        def f(x, y, w, h):   
             return [x/W, y/H, w/W, h/H]
 
-        GAP = max(4, int(W * 0.003))   # ~4-6 px gap, scales with resolution
+        GAP = max(4, int(W * 0.003))   
         PAD = max(4, int(W * 0.003))
 
-        # Bottom strip height: ~230px on 1080p, scales with screen height
+        
         BOT_H_PX = max(200, int(H * 0.265))
 
-        # Sidebar width: ~310px on 1920, scales with screen width
+        
         SB_W_PX  = max(280, int(W * 0.200))
 
-        # Track canvas
+        
         track_x = PAD
         track_y = BOT_H_PX + GAP
         track_w = W - SB_W_PX - GAP - PAD * 2
         track_h = H - track_y - PAD
         self.ax_track = self.fig.add_axes(f(track_x, track_y, track_w, track_h))
 
-        # Sidebar right column
+   
         sb_x     = W - SB_W_PX - PAD
         lap_h    = max(220, int(H * 0.290))
         radar_h  = max(160, int(H * 0.195))
@@ -279,7 +278,7 @@ class LearningSimulator(SimulatorBase):
         self.ax_radar = self.fig.add_axes(f(sb_x, radar_y, SB_W_PX, radar_h))
         self.ax_mini  = self.fig.add_axes(f(sb_x, pop_y,   SB_W_PX, max(10, pop_h)))
 
-        # Bottom strip: 5 panels across full width
+        
         bot_w_total = W - PAD * 2
         wr = [1.70, 0.72, 0.63, 0.80, 1.00]
         tot = sum(wr)
@@ -295,7 +294,7 @@ class LearningSimulator(SimulatorBase):
 
         self.ax_graph, self.ax_info, self.ax_commands, self.ax_events, self.ax_neural = axes_bot
 
-        # Store for dynamic font scaling
+        
         self._scale = min(W / 1920, H / 1080)   # 1.0 on 1920×1080
         global _SCALE
         _SCALE = self._scale
@@ -311,6 +310,7 @@ class LearningSimulator(SimulatorBase):
         self.fig.canvas.mpl_connect('key_press_event',      self._on_key)
         self.fig.canvas.mpl_connect('close_event',          self._on_close)
         self.fig.canvas.mpl_connect('button_press_event',   self._on_click)
+
 
     # ─────────────────────────────────────────────────────────
     #  TRACK GEOMETRY  (computed once)
@@ -335,6 +335,7 @@ class LearningSimulator(SimulatorBase):
         self._start_zebras = self._build_zebras(
             CONFIG['start_line'], (_UI['white'], _UI['bg']))
 
+
     def _build_zebras(self, cfg, colors):
         xc, yc = cfg['x'], cfg['y']
         w  = cfg.get('width',       cfg.get('largura',    1.8))
@@ -346,6 +347,7 @@ class LearningSimulator(SimulatorBase):
                      cor=colors[i % 2], cx=xc, cy=yc, angle=ang)
                 for i in range(n)]
 
+
     # ─────────────────────────────────────────────────────────
     #  STATIC BACKGROUND  (saved for blit)
     # ─────────────────────────────────────────────────────────
@@ -356,6 +358,7 @@ class LearningSimulator(SimulatorBase):
         plt.subplots_adjust(left=0.0, right=1.0, top=1.0, bottom=0.0)
         self.fig.canvas.draw()
         self._bg = self.fig.canvas.copy_from_bbox(self.fig.bbox)
+
 
     # ─────────────────────────────────────────────────────────
     #  TRACK CANVAS (static part)
@@ -370,14 +373,14 @@ class LearningSimulator(SimulatorBase):
         for sp in ax.spines.values():
             sp.set_edgecolor(_UI['border_hi']); sp.set_linewidth(1.2)
 
-        # Subtle grass texture via grid
+
         ax.grid(True, color=_UI['border'], alpha=0.06, linewidth=0.4, linestyle=':')
 
-        # Track asphalt fill
+
         ax.add_patch(PathPatch(self._track_path,
                                facecolor=_UI['asphalt'], edgecolor='none', zorder=1))
 
-        # Outer glow (layered transparency)
+
         for extra, a in [(1.8, 0.04), (1.0, 0.06), (0.4, 0.09)]:
             glow_patch = PathPatch(self._track_path,
                                    facecolor='none',
@@ -386,29 +389,30 @@ class LearningSimulator(SimulatorBase):
                                    alpha=a, zorder=2)
             ax.add_patch(glow_patch)
 
-        # Borders
+
         for bx, by, col, lw in [
             (self._ext_x, self._ext_y, _UI['white'], 1.8),
             (self._int_x, self._int_y, _UI['white'], 1.8),
         ]:
             ax.plot(bx, by, color=col, lw=lw, zorder=4, solid_capstyle='round')
-        # Accent border tints
+
+
         ax.plot(self._ext_x, self._ext_y, color=_UI['cyan'], lw=0.5, alpha=0.4, zorder=5)
         ax.plot(self._int_x, self._int_y, color=_UI['danger'], lw=0.5, alpha=0.35, zorder=5)
 
-        # Centerline dashes
+   
         ax.plot(self._cl_cx, self._cl_cy,
                 linestyle=(0, (6, 9)), color=_UI['text3'],
                 lw=0.7, alpha=0.4, zorder=3)
 
-        # Start/finish zebras
+
         for z in self._start_zebras:
             t_xf = Affine2D().rotate_deg_around(z['cx'], z['cy'], z['angle']) + ax.transData
             p = Rectangle(z['xy'], z['width'], z['height'],
                           facecolor=z['cor'], edgecolor='none', zorder=6)
             p.set_transform(t_xf); ax.add_patch(p)
 
-        # Track name badge
+
         ax.text(0.5, 0.980, _NOME_PISTA.upper(),
                 transform=ax.transAxes, fontsize=9, fontweight='bold',
                 color=_UI['text1'], va='top', ha='center', fontfamily='monospace',
@@ -417,7 +421,7 @@ class LearningSimulator(SimulatorBase):
                           edgecolor=_UI['border_hi'], linewidth=0.9),
                 zorder=10)
 
-        # Corner brackets
+
         for (bx, by, bw, bh) in [(0.005, 0.012, 0.035, 0.055),
                                   (0.960, 0.012, 0.035, 0.055)]:
             for dx, dy, sides in [
@@ -484,11 +488,11 @@ class LearningSimulator(SimulatorBase):
         best   = np.array(self.historico_melhor[start:])
         avg    = np.array(self.historico_media[start:])
 
-        # Gradient fill under best
+
         ax.fill_between(gens, best, alpha=0.12, color=_UI['accent'])
         ax.fill_between(gens, avg,  alpha=0.07, color=_UI['info'])
 
-        # Smoothed trend line (EMA)
+
         if len(best) > 5:
             alpha_ema = 0.15
             ema = best.copy()
@@ -497,25 +501,29 @@ class LearningSimulator(SimulatorBase):
             ax.plot(gens, ema, color=_alpha(_UI['accent'], 0.35), lw=1.2,
                     linestyle='--', label='_nolegend_')
 
+
         ax.plot(gens, best, color=_UI['accent'], lw=2.0, label='Best',
                 solid_capstyle='round')
         ax.plot(gens, avg,  color=_UI['info'],   lw=1.3, label='Avg',
                 alpha=0.8,  solid_capstyle='round')
 
-        # Latest value markers
+
         ax.scatter([gens[-1]], [best[-1]], s=30, color=_UI['accent'],
                    zorder=6, edgecolors=_UI['bg'], linewidths=0.8)
         ax.scatter([gens[-1]], [avg[-1]],  s=18, color=_UI['info'],
                    zorder=6, edgecolors=_UI['bg'], linewidths=0.8)
+
 
         ax.set_xlim(start, start + WINDOW - 1)
         ax.set_xlabel('Generation', fontsize=7, color=_UI['text3'])
         ax.grid(True, alpha=0.10, color=_UI['mid'], linestyle=':')
         ax.yaxis.set_major_locator(MaxNLocator(4))
 
+
         leg = ax.legend(loc='upper left', fontsize=7, framealpha=0.0)
         for t in leg.get_texts():
             t.set_color(_UI['text2']); t.set_fontfamily('monospace')
+
 
     def _draw_info_panel(self):
         ax = self.ax_info
@@ -537,7 +545,7 @@ class LearningSimulator(SimulatorBase):
                   _UI['accent2'] if mode == 'shake' else _UI['text2'])
 
         sections = [
-            # (y_top, header, [(label, value, val_color)])
+
             (0.96, 'ARCHITECTURE', [
                 ('Inputs',     '7 sensors + speed', _UI['text2']),
                 ('Layers',     '8 → 16 → 2',        _UI['cyan']),
@@ -554,6 +562,7 @@ class LearningSimulator(SimulatorBase):
             ]),
         ]
 
+
         xL, xR = 0.06, 0.97
         for y0, hdr, rows in sections:
             _text(ax, xL, y0, hdr, fs=6.5, fw='bold', color=_UI['mid'])
@@ -566,12 +575,14 @@ class LearningSimulator(SimulatorBase):
                 _text(ax, xR, y, str(val), fs=7, fw='bold', color=col,
                       ha='right', va='center')
 
+
     def _clear_commands_panel(self):
         ax = self.ax_commands
         self._style_card(ax, 'AI COMMANDS')
         ax.set_xlim(0, 10); ax.set_ylim(0, 10)
         ax.tick_params(left=False, bottom=False, labelleft=False, labelbottom=False)
         for sp in ax.spines.values(): sp.set_visible(False)
+
 
     def _clear_events_panel(self):
         ax = self.ax_events
@@ -580,12 +591,14 @@ class LearningSimulator(SimulatorBase):
         ax.tick_params(left=False, bottom=False, labelleft=False, labelbottom=False)
         for sp in ax.spines.values(): sp.set_visible(False)
 
+
     def _clear_neural_panel(self):
         ax = self.ax_neural
         self._style_card(ax, 'NEURAL NETWORK')
         ax.set_xlim(0, 1); ax.set_ylim(0, 1)
         ax.tick_params(left=False, bottom=False, labelleft=False, labelbottom=False)
         for sp in ax.spines.values(): sp.set_visible(False)
+
 
     # ─────────────────────────────────────────────────────────
     #  SIDEBAR  (static)
@@ -596,7 +609,7 @@ class LearningSimulator(SimulatorBase):
             for sp in ax.spines.values():
                 sp.set_edgecolor(_UI['border_hi']); sp.set_linewidth(0.9)
 
-        # Lap panel title
+
         self.ax_lap.set_xlim(0, 1); self.ax_lap.set_ylim(0, 1)
         self.ax_lap.tick_params(left=False, bottom=False,
                                 labelleft=False, labelbottom=False)
@@ -607,7 +620,7 @@ class LearningSimulator(SimulatorBase):
                          color=_UI['text2'], va='top', ha='center',
                          fontfamily='monospace')
 
-        # Radar panel title
+
         self.ax_radar.set_xlim(-1.25, 1.25); self.ax_radar.set_ylim(-1.25, 1.25)
         self.ax_radar.set_aspect('equal')
         self.ax_radar.tick_params(left=False, bottom=False,
@@ -619,7 +632,7 @@ class LearningSimulator(SimulatorBase):
                            color=_UI['text2'], va='top', ha='center',
                            fontfamily='monospace')
 
-        # Mini panel title
+
         self.ax_mini.set_facecolor(_UI['card2'])
         self.ax_mini.text(0.5, 0.975, 'POPULATION STATS',
                           transform=self.ax_mini.transAxes,
@@ -646,7 +659,7 @@ class LearningSimulator(SimulatorBase):
         h_ys   = np.linspace(0.92, 0.04, _N_HID)
         out_ys = np.array([0.68, 0.28])
 
-        # Layer labels
+   
         for x, lbl in [(x_in, 'IN'), (x_h, 'HIDDEN'), (x_out, 'OUT')]:
             _text(ax, x, 0.97, lbl, fs=5.5, fw='bold',
                   color=_UI['mid'], ha='center', va='top')
@@ -654,7 +667,7 @@ class LearningSimulator(SimulatorBase):
         c_pos = _hex(_UI['accent'])
         c_neg = _hex(_UI['danger'])
 
-        # W1 connections
+
         w1_max = max(np.abs(brain.W1).max(), 1e-6)
         segs, cols, lws = [], [], []
         for i in range(8):
@@ -670,7 +683,7 @@ class LearningSimulator(SimulatorBase):
                                 transform=ax.transAxes, zorder=2)
             ax.add_collection(lc); ax.draw_artist(lc); lc.remove()
 
-        # W2 connections
+
         w2_max = max(np.abs(brain.W2).max(), 1e-6)
         segs, cols, lws = [], [], []
         for j in range(_N_HID):
@@ -686,14 +699,14 @@ class LearningSimulator(SimulatorBase):
                                 transform=ax.transAxes, zorder=2)
             ax.add_collection(lc); ax.draw_artist(lc); lc.remove()
 
-        # Input nodes (cyan, activation intensity)
+
         c_in = _hex(_UI['info'])
         in_rgba = [(c_in[0], c_in[1], c_in[2], 0.20 + float(v) * 0.80) for v in s]
         sc = ax.scatter([x_in]*8, in_ys, s=26, c=in_rgba, edgecolors='none',
                         transform=ax.transAxes, zorder=5, clip_on=False)
         ax.draw_artist(sc); sc.remove()
 
-        # Hidden nodes (green↔inactive blend)
+
         c_on  = _hex(_UI['accent'])
         c_off = _hex(_UI['inactive'])
         h_rgba = []
@@ -707,7 +720,7 @@ class LearningSimulator(SimulatorBase):
                         transform=ax.transAxes, zorder=5, clip_on=False)
         ax.draw_artist(sc); sc.remove()
 
-        # Output nodes
+
         steer_v = float((a2[0] - 0.5) * 2.0)
         gas_v   = float(a2[1])
         c_y = _hex(_UI['accent2'])
@@ -724,12 +737,12 @@ class LearningSimulator(SimulatorBase):
                         transform=ax.transAxes, zorder=5, clip_on=False)
         ax.draw_artist(sc); sc.remove()
 
-        # Input sensor angle labels
+
         for y, lbl in zip(in_ys, ['-90°','-45°','-22°',' 0° ','+22°','+45°','+90°','vel']):
             _text(ax, 0.01, y, lbl, fs=5.5, color=_UI['text3'],
                   ha='left', va='center')
 
-        # Output labels
+
         esq   = max(0.0, -steer_v); dir_ = max(0.0, steer_v)
         gas_i = max(0.0, (gas_v - 0.5) * 2); brk_i = max(0.0, (0.5 - gas_v) * 2)
         for y_n, lbl, rgba, intensity, dy_ in [
@@ -752,6 +765,7 @@ class LearningSimulator(SimulatorBase):
                   color=(rgba[0], rgba[1], rgba[2], 0.9),
                   ha='left', va='center')
 
+
     # ─────────────────────────────────────────────────────────
     #  BLIT: SENSOR RADAR
     # ─────────────────────────────────────────────────────────
@@ -766,7 +780,7 @@ class LearningSimulator(SimulatorBase):
         _text(ax, 0.5, 0.975, 'SENSOR RADAR',
               fs=8.5, fw='bold', color=_UI['text2'], ha='center', va='top')
 
-        # Grid rings
+
         for r in [0.33, 0.66, 1.0]:
             circle = plt.Circle((0, 0), r, fill=False,
                                  edgecolor=_UI['border'], lw=0.6, alpha=0.5,
@@ -810,6 +824,7 @@ class LearningSimulator(SimulatorBase):
 
         self.fig.canvas.blit(self.ax_radar.get_tightbbox())
 
+
     # ─────────────────────────────────────────────────────────
     #  BLIT: SIDEBAR — BEST ALIVE PANEL
     # ─────────────────────────────────────────────────────────
@@ -822,13 +837,13 @@ class LearningSimulator(SimulatorBase):
             sp.set_edgecolor(_UI['border_hi']); sp.set_linewidth(0.9); sp.set_visible(True)
         ax.tick_params(left=False, bottom=False, labelleft=False, labelbottom=False)
 
-        # Title bar
+
         _rect(ax, (0, 0.875), 1.0, 0.125,
               fc=_alpha(_UI['card2'], 0.9), ec='none', zorder=3)
         _text(ax, 0.5, 0.965, 'BEST ALIVE',
               fs=8.5, fw='bold', color=_UI['accent'], ha='center', va='top', glow=True)
 
-        # Alive count badge
+
         pop = len(self.carrinhos)
         frac = alive_count / pop
         alive_col = (_UI['accent'] if frac > 0.5 else
@@ -854,14 +869,14 @@ class LearningSimulator(SimulatorBase):
         car = self.carrinhos[best_idx]
         obj = CONFIG['simulation']['target_laps']
 
-        # Lap progress arc gauge
+
         lap_frac = car.voltas_completas / max(obj, 1)
         _draw_gauge(ax, 0.25, 0.62, 0.16,
                     value=min(lap_frac, 1.0),
                     color=_UI['accent'],
                     label=f'{car.voltas_completas}/{obj} LAPS')
 
-        # Score gauge
+
         score_max = max(self.historico_melhor[-1] if self.historico_melhor else 1, 1)
         score_frac = min(car.pontos_acumulados / score_max, 1.0)
         _draw_gauge(ax, 0.75, 0.62, 0.16,
@@ -874,18 +889,19 @@ class LearningSimulator(SimulatorBase):
 
         _hline(ax, 0.440, color=_UI['border'], lw=0.5, alpha=0.5)
 
-        # Lap timing rows
+
         fr_atual  = car.tempo_vivo - car.frame_inicio_volta
         best_lap  = car.melhor_tempo_volta
         record    = self.record_global_volta
         rec_gen   = self.record_global_volta_geracao
+
 
         def _row(y_, label, value, col_v):
             _text(ax, 0.06, y_, label, fs=7, color=_UI['text3'], va='center')
             _text(ax, 0.97, y_, value, fs=7.5, fw='bold',
                   color=col_v, ha='right', va='center')
 
-        # Current lap frame colour
+
         if best_lap and fr_atual < best_lap:
             cur_col = _UI['accent']
         elif car.voltas_completas > 0:
@@ -902,7 +918,7 @@ class LearningSimulator(SimulatorBase):
              (f'{record} fr / G{rec_gen}' if record else '—'), _UI['cyan'])
         _hline(ax, 0.205, color=_UI['border'], lw=0.4, alpha=0.4)
 
-        # Speed mini-bar
+
         vel_pct = car.velocidade / CONFIG['cars']['max_speed']
         pen = CONFIG['penalties']
         thr = (0.0 if car.voltas_completas == 0 else
@@ -920,7 +936,7 @@ class LearningSimulator(SimulatorBase):
             _rect(ax, (0.06 + 0.88 * thr - 0.003, 0.080),
                   0.006, 0.048, fc=_UI['danger'], ec='none', alpha=0.7, zorder=5)
 
-        # Stagnation indicator bar
+
         stag      = self.gens_sem_melhora
         stag_max  = 40
         stag_frac = min(stag / stag_max, 1.0)
@@ -948,7 +964,7 @@ class LearningSimulator(SimulatorBase):
               fs=8.5, fw='bold', color=_UI['text2'], ha='center', va='top')
         _hline(ax, 0.945, color=_UI['border_hi'], lw=0.8, alpha=0.7)
 
-        # FPS
+
         now = time.time()
         dt  = now - self._last_frame_time
         self._last_frame_time = now
@@ -961,7 +977,7 @@ class LearningSimulator(SimulatorBase):
         pop = len(self.carrinhos)
         dead = pop - alive_count
 
-        # Alive vs dead donut-style bar
+
         frac = alive_count / max(pop, 1)
         _rect(ax, (0.05, 0.870), 0.90, 0.050,
               fc=_UI['inactive'], ec='none', zorder=3)
@@ -975,7 +991,7 @@ class LearningSimulator(SimulatorBase):
 
         _hline(ax, 0.848, color=_UI['border'], lw=0.5, alpha=0.5)
 
-        # Fitness history mini chart
+
         if len(self.historico_melhor) >= 2:
             WINDOW = 40
             total  = len(self.historico_melhor)
@@ -999,7 +1015,7 @@ class LearningSimulator(SimulatorBase):
 
         _hline(ax, 0.460, color=_UI['border'], lw=0.5, alpha=0.5)
 
-        # Mutation mode badge
+
         mode = self.modo_mutacao
         mode_colors = {
             'explore':  _UI['info'],
@@ -1018,7 +1034,7 @@ class LearningSimulator(SimulatorBase):
 
         _hline(ax, 0.345, color=_UI['border'], lw=0.5, alpha=0.5)
 
-        # Key metrics row
+
         metrics = [
             ('GEN',   f'{self.geracao + 1}',    _UI['cyan']),
             ('POP',   f'{pop}',                  _UI['text2']),
@@ -1038,7 +1054,7 @@ class LearningSimulator(SimulatorBase):
 
         _hline(ax, 0.168, color=_UI['border'], lw=0.5, alpha=0.5)
 
-        # Tips
+
         tips = [
             ('Q',      'quit simulation'),
             ('SPACE',  'toggle sensors'),
@@ -1054,6 +1070,7 @@ class LearningSimulator(SimulatorBase):
 
         self.fig.canvas.blit(self.ax_mini.get_tightbbox())
 
+
     # ─────────────────────────────────────────────────────────
     #  BLIT: COMMANDS PANEL
     # ─────────────────────────────────────────────────────────
@@ -1064,8 +1081,8 @@ class LearningSimulator(SimulatorBase):
 
         car    = self.carrinhos[best_idx]
         acao   = car.ultima_acao
-        steer  = float(acao[0])         # −1..+1
-        gas    = float(acao[1])         # 0..1
+        steer  = float(acao[0])         
+        gas    = float(acao[1])         
         acel   = gas >= 0.5
         vel_pct = car.velocidade / CONFIG['cars']['max_speed']
         pen     = CONFIG['penalties']
@@ -1077,41 +1094,41 @@ class LearningSimulator(SimulatorBase):
         acel_c = _UI['accent'] if acel else _UI['danger']
         spd_c  = _UI['danger'] if vel_pct < thr_spd else _UI['accent']
 
-        # ── Steering ──────────────────────────────
+
         _text(al, 0.5, 8.85, 'STEERING', fs=6.5, color=_UI['text3'],
               ha='left', va='top', transform=al.transData)
 
         tx0, tx1, ty, th = 0.5, 9.5, 7.60, 0.52
-        # Track
+
         _rect(al, (tx0, ty), tx1 - tx0, th,
               fc=_UI['inactive'], ec='none', zorder=3, transform=al.transData)
 
         cx  = (tx0 + tx1) / 2
-        # Center tick
+
         _rect(al, (cx - 0.05, ty - 0.05), 0.10, th + 0.10,
               fc=_UI['mid'], ec='none', alpha=0.6, zorder=4, transform=al.transData)
 
-        # Fill
+
         nx = cx + steer * (tx1 - cx)
         d_col = (_UI['info']   if abs(steer) < 0.25 else
                  _UI['accent2'] if steer < 0         else _UI['accent'])
         _rect(al, (min(cx, nx), ty), abs(nx - cx), th,
               fc=d_col, ec='none', alpha=0.85, zorder=5, transform=al.transData)
-        # Needle
+
         _rect(al, (nx - 0.10, ty - 0.12), 0.20, th + 0.24,
               fc=_UI['white'], ec='none', zorder=6, transform=al.transData)
 
         _text(al, 9.5, 8.85, f'{steer:+.2f}', fs=6.5, color=_UI['text2'],
               ha='right', va='top', transform=al.transData)
 
-        # Arrow indicators
+
         for txt, xp, ha_, active in [('◀', tx0 - 0.18, 'right', steer < -0.1),
                                       ('▶', tx1 + 0.18, 'left',  steer > 0.1)]:
             col = _UI['accent'] if active else _UI['inactive']
             _text(al, xp, ty + th/2, txt, fs=6.5, fw='bold', color=col,
                   ha=ha_, va='center', transform=al.transData)
 
-        # ── Throttle ──────────────────────────────
+
         _text(al, 0.5, 6.10, 'THROTTLE', fs=6.5, color=_UI['text3'],
               ha='left', va='top', transform=al.transData)
         _rect(al, (tx0, 4.92), tx1 - tx0, th,
@@ -1127,11 +1144,11 @@ class LearningSimulator(SimulatorBase):
             _text(al, xp, 3.55, txt, fs=7.5, fw=fw_, color=col,
                   ha='center', va='center', transform=al.transData)
 
-        # Separator
+
         l = Line2D([5.0, 5.0], [3.05, 4.10], color=_UI['border'], lw=0.8, zorder=4)
         al.add_line(l); al.draw_artist(l); l.remove()
 
-        # ── Speed ─────────────────────────────────
+
         _text(al, 0.5, 1.70, 'SPEED', fs=6.5, color=_UI['text3'],
               ha='left', va='top', transform=al.transData)
         _text(al, 9.5, 1.70, f'{vel_pct*100:.0f}%  ({car.velocidade:.2f})',
@@ -1195,12 +1212,12 @@ class LearningSimulator(SimulatorBase):
             val_col = col_on if active else _UI['mid']
             dsc_col = _UI['text3'] if active else _UI['text3']
 
-            # Active indicator bar
+
             _rect(ae, (0.25, y_row - 0.62), 0.22, 1.32,
                   fc=bar_col, ec='none', alpha=0.85 if active else 0.3,
                   zorder=4, transform=ae.transData)
 
-            # Glow pill when active
+
             if active:
                 gp = FancyBboxPatch((0.25, y_row - 0.62), 0.22, 1.32,
                                     boxstyle='round,pad=0.08',
@@ -1209,12 +1226,12 @@ class LearningSimulator(SimulatorBase):
                                     alpha=0.6, transform=ae.transData, zorder=5)
                 ae.add_patch(gp); ae.draw_artist(gp); gp.remove()
 
-            # Separator
+
             l = Line2D([0.25, 9.75], [y_row - 0.72, y_row - 0.72],
                        color=_UI['border'], lw=0.4, alpha=0.4, zorder=3)
             ae.add_line(l); ae.draw_artist(l); l.remove()
 
-            # Texts
+
             _text(ae, 0.85, y_row + 0.38, label,
                   fs=7.5, fw='bold' if active else 'normal',
                   color=lbl_col, ha='left', va='center', transform=ae.transData)
@@ -1244,31 +1261,31 @@ class LearningSimulator(SimulatorBase):
         def _rot(lx, ly):
             return cx + lx*ca - ly*sa, cy + lx*sa + ly*ca
 
-        # Main body outline (8-point rounded rectangle approximation)
-        r = W * 0.18   # corner rounding
+
+        r = W * 0.18   
         body = [
-            _rot(-L*0.45,  W*0.30),   # rear-left
-            _rot(-L*0.45, -W*0.30),   # rear-right
-            _rot( L*0.30, -W*0.48),   # mid-right
-            _rot( L*0.48, -W*0.28),   # front-right shoulder
-            _rot( L*0.55,  0.0),      # nose tip
-            _rot( L*0.48,  W*0.28),   # front-left shoulder
-            _rot( L*0.30,  W*0.48),   # mid-left
+            _rot(-L*0.45,  W*0.30),   
+            _rot(-L*0.45, -W*0.30),   
+            _rot( L*0.30, -W*0.48),   
+            _rot( L*0.48, -W*0.28),   
+            _rot( L*0.55,  0.0),      
+            _rot( L*0.48,  W*0.28),   
+            _rot( L*0.30,  W*0.48),   
         ]
         return body
 
     def _draw_cars(self, best_idx, alive_mask):
         ax  = self.ax_track
         cfg = CONFIG['cars']
-        # Size cars relative to the track extent so they're always visible
+       
         track_span = min(
             _TRACK_XLIM[1] - _TRACK_XLIM[0],
             _TRACK_YLIM[1] - _TRACK_YLIM[0]
         )
-        L = track_span * 0.028   # ~2.8% of track span = visible but not huge
+        L = track_span * 0.028   
         W = L * 0.48
 
-        # ── Ghost trail ───────────────────────────────────────
+
         if self._show_trail and self._ghost_trail:
             n = len(self._ghost_trail)
             segs, cols = [], []
@@ -1282,7 +1299,7 @@ class LearningSimulator(SimulatorBase):
                                     zorder=8, transform=ax.transData)
                 ax.add_collection(lc); ax.draw_artist(lc); lc.remove()
 
-        # ── Dead markers — small faded X ──────────────────────
+
         dead_x = [c.x for c, v in zip(self.carrinhos, alive_mask) if not v]
         dead_y = [c.y for c, v in zip(self.carrinhos, alive_mask) if not v]
         if dead_x:
@@ -1292,7 +1309,7 @@ class LearningSimulator(SimulatorBase):
                             alpha=0.20, zorder=9)
             ax.draw_artist(sc); sc.remove()
 
-        # ── Normal alive cars — batched car sprites ────────────
+
         body_verts, body_colors = [], []
         wind_verts, wind_colors = [], []
 
@@ -1305,7 +1322,7 @@ class LearningSimulator(SimulatorBase):
             body_verts.append(body)
             body_colors.append(_alpha(_UI['normal_car'], 0.85))
 
-            # Windscreen (small bright rectangle behind nose)
+
             wL, wW = L * 0.18, W * 0.38
             wx = car.x + (L*0.15)*ca
             wy = car.y + (L*0.15)*sa
@@ -1328,14 +1345,14 @@ class LearningSimulator(SimulatorBase):
                                 edgecolors='none', zorder=11)
             ax.add_collection(wc); ax.draw_artist(wc); wc.remove()
 
-        # ── Best car — full detailed sprite with glow ──────────
+
         if best_idx is not None:
             car = self.carrinhos[best_idx]
             if car.vivo:
                 rad = np.radians(car.angulo)
                 ca, sa = np.cos(rad), np.sin(rad)
 
-                # Multi-layer glow halo
+                
                 for gL, gW, ga in [(L*2.0, W*2.0, 0.06),
                                    (L*1.5, W*1.5, 0.10),
                                    (L*1.2, W*1.2, 0.14)]:
@@ -1345,7 +1362,7 @@ class LearningSimulator(SimulatorBase):
                                  alpha=ga, zorder=9)
                     ax.add_patch(gp); ax.draw_artist(gp); gp.remove()
 
-                # Body
+
                 bverts = self._car_sprite_verts(car.x, car.y, car.angulo, L, W)
                 bp = Polygon(bverts, closed=True,
                              facecolor=_UI['best'],
@@ -1353,7 +1370,7 @@ class LearningSimulator(SimulatorBase):
                              linewidth=0.6, zorder=12)
                 ax.add_patch(bp); ax.draw_artist(bp); bp.remove()
 
-                # Windscreen — bright cyan
+
                 wL2, wW2 = L * 0.18, W * 0.38
                 wx2 = car.x + (L*0.15)*ca
                 wy2 = car.y + (L*0.15)*sa
@@ -1368,7 +1385,7 @@ class LearningSimulator(SimulatorBase):
                              alpha=0.85, zorder=13)
                 ax.add_patch(wp); ax.draw_artist(wp); wp.remove()
 
-                # Wheels — 4 small dark rectangles at corners
+
                 wh_l, wh_w = L * 0.22, W * 0.14
                 for lx, ly in [(-L*0.28,  W*0.42), (-L*0.28, -W*0.42),
                                 ( L*0.15,  W*0.45), ( L*0.15, -W*0.45)]:
@@ -1381,7 +1398,7 @@ class LearningSimulator(SimulatorBase):
                                    linewidth=0.3, zorder=13)
                     ax.add_patch(wh_p); ax.draw_artist(wh_p); wh_p.remove()
 
-                # Sensors
+   
                 if CONFIG.get('visualization', {}).get('show_sensors', True):
                     sensores = getattr(car, '_cached_sensores', None) or car.get_sensores()
                     angs = [car.angulo + a for a in [-90,-45,-22.5,0,22.5,45,90]]
@@ -1393,7 +1410,7 @@ class LearningSimulator(SimulatorBase):
                                     ls='--', color=sc_, alpha=0.50, lw=1.0)
                         ax.add_line(sl); ax.draw_artist(sl); sl.remove()
 
-                # Update ghost trail
+
                 self._ghost_trail.append((car.x, car.y))
                 if len(self._ghost_trail) > self._MAX_TRAIL:
                     self._ghost_trail.pop(0)
@@ -1404,14 +1421,13 @@ class LearningSimulator(SimulatorBase):
     def _draw_track_overlays(self, best_idx, alive_count):
         ax = self.ax_track
 
-        # ── Help overlay ──────────────────────────────────────
+
         if self._help_visible:
             self._draw_help_overlay(ax)
 
-        # ── Floating notification ─────────────────────────────
         self._draw_notifications(ax)
 
-        # ── Help button ───────────────────────────────────────
+
         _pill(ax, 0.007, 0.018, 0.026, 0.042,
               fc=_alpha(_UI['card'], 0.88), ec=_UI['border_hi'],
               lw=0.8, zorder=19)
@@ -1523,7 +1539,7 @@ class LearningSimulator(SimulatorBase):
         best_idx = (max(alive_idxs, key=lambda i: fitness_now[i])
                     if alive_idxs else None)
 
-        # Notify best-car death
+
         if (self._best_idx_prev is not None
                 and not self.carrinhos[self._best_idx_prev].vivo):
             c = self.carrinhos[self._best_idx_prev]
@@ -1532,7 +1548,7 @@ class LearningSimulator(SimulatorBase):
             self._notifications = self._notifications[-1:]
         self._best_idx_prev = best_idx
 
-        # Draw everything
+
         self._draw_cars(best_idx, alive_mask)
         self._draw_track_overlays(best_idx, alive_count)
         self._draw_commands_panel(best_idx)
@@ -1567,7 +1583,7 @@ class LearningSimulator(SimulatorBase):
             ('Close the window to exit.',                    9, 'normal', _UI['text3']),
         ]
 
-        # Backdrop card
+   
         cw, ch = 0.35, 0.52
         cx_, cy_ = 0.5 - cw/2, 0.5 - ch/2
         _pill(ax, cx_, cy_, cw, ch,
@@ -1615,7 +1631,8 @@ class LearningSimulator(SimulatorBase):
     def _on_click(self, event):
         if event.inaxes != self.ax_track:
             return
-        # ? button hit-test
+
+
         disp = self.ax_track.transAxes.transform([[0.007, 0.018], [0.033, 0.060]])
         x0, y0 = disp[0]; x1, y1 = disp[1]
         if x0 <= event.x <= x1 and y0 <= event.y <= y1:
@@ -1636,7 +1653,7 @@ class LearningSimulator(SimulatorBase):
 
         try:
             mgr = self.fig.canvas.manager
-            # Try Tk maximise first (most common backend)
+
             try:
                 mgr.window.state('zoomed')
             except Exception:

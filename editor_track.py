@@ -1,6 +1,3 @@
-# Interactive track editor — click to add points, generates Catmull-Rom spline.
-# Exports track.json for use in the simulator.
-
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.patheffects as pe
@@ -52,15 +49,14 @@ PAL = {
 }
 
 TRACK_JSON = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'track.json')
-SNAP_R = 0.9       # snap/remove radius
-N_SEG  = 50        # spline segments per control-point pair (higher = smoother)
+SNAP_R = 0.9      
+N_SEG  = 50        
 
 
 # ──────────────────────────────────────────
 #  MATH HELPERS
 # ──────────────────────────────────────────
 def catmull_rom(pts: np.ndarray, n_seg: int = N_SEG) -> np.ndarray:
-    """Closed Catmull-Rom spline through control points."""
     closed = np.vstack([pts, pts[0]])
     n = len(closed) - 1
     ts  = np.linspace(0, 1, n_seg, endpoint=False)
@@ -165,7 +161,6 @@ def _section_label(fig, x, y, text, color=None):
 #  MINIMAP AXIS
 # ──────────────────────────────────────────
 class Minimap:
-    """Small overview panel showing the full track + curvature heat."""
     def __init__(self, fig, rect):
         self.ax = fig.add_axes(rect)
         self.ax.set_facecolor(PAL['bg'])
@@ -193,7 +188,6 @@ class Minimap:
             self._artists.append(t)
             return
 
-        # Curvature-coloured centerline
         kap = np.abs(curvature(cl))
         cx = np.append(cl[:, 0], cl[0, 0])
         cy = np.append(cl[:, 1], cl[0, 1])
@@ -202,14 +196,14 @@ class Minimap:
         ax.add_collection(lc)
         self._artists.append(lc)
 
-        # Borders
+        
         ox, oy, ix, iy = track_borders(cl, hw)
         for bx, by in [(ox, oy), (ix, iy)]:
             l, = ax.plot(np.append(bx, bx[0]), np.append(by, by[0]),
                          color=PAL['white'], lw=0.6, alpha=0.4)
             self._artists.append(l)
 
-        # Control points
+        
         if pts is not None and len(pts):
             pa = np.array(pts)
             sc = ax.scatter(pa[:, 0], pa[:, 1], s=14,
@@ -294,7 +288,7 @@ class StatsPanel:
 #  CURVATURE CHART
 # ──────────────────────────────────────────
 class CurvatureChart:
-    """Small curvature profile chart."""
+    
     def __init__(self, fig, rect):
         self.ax = fig.add_axes(rect)
         self.ax.set_facecolor(PAL['card'])
@@ -367,7 +361,7 @@ class TrackEditor:
         self.width      = 1.8
         self.track_name = 'Track 1'
         self._drag_idx  = None
-        self._undo_stack: list[tuple] = []   # list of (points_copy, width)
+        self._undo_stack: list[tuple] = []  
         self._snap_grid  = False
         self._grid_size  = 1.0
         self._show_cp_labels = True
