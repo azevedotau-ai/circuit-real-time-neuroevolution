@@ -71,7 +71,7 @@ Speed (norm.)  ───
 neural-network-circuit-game/
 │
 ├── app.py                  # Entry point
-├── config.json             # All simulation parameters
+├── setting.json             # All simulation parameters
 ├── track.json              # Circuit definition (control points, start/finish)
 │
 ├── src/
@@ -130,7 +130,7 @@ python editor_track.py
 
 ## ⚙️ Configuration
 
-All parameters are in `config.json`. Key sections:
+All parameters are in `setting.json`. Key sections:
 
 ```jsonc
 {
