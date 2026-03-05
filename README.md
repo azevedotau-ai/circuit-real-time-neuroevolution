@@ -93,12 +93,15 @@ neural-network-circuit-game/
 Python 3.11+
 numpy
 matplotlib
+torch
+torchvision
+torchaudio
 ```
 
 Install dependencies:
 
 ```bash
-pip install numpy matplotlib
+pip install -r requirements.txt
 ```
 
 ### Run the simulation
