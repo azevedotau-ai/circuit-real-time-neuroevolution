@@ -1,0 +1,94 @@
+{
+    "cars": {
+        "initial_angle": 0.0,
+        "initial_speed_pct": 0,
+        "max_speed": 1,
+        "speed_step": 0.025,
+        "max_turn_angle": 12,
+        "size": 0.30,
+        "dead_size": 20,
+        "dead_thickness": 2
+    },
+    "lap_detection": {
+        "min_distance_from_finish": 5.0,
+        "min_lap_fraction": 0.7
+    },
+    "simulation": {
+        "population": 80,
+        "target_laps": 10,
+        "steps_per_frame": 1,
+        "top_survivors": 10,
+        "new_random_per_generation": 10,
+        "frames_without_progress": 40,
+        "min_progress_per_window": 10
+    },
+    "rewards": {
+        "center_weight": 3.0,
+        "speed_weight": 8.0,
+        "circuit_progress_weight": 15.0,
+        "speed_progress_factor": 0.8,
+        "lap_reward": 1000.0,
+        "fast_lap_bonus": 800.0,
+        "target_lap_frames": 200,
+        "record_bonus_factor": 2.0
+    },
+    "penalties": {
+        "collision_penalty": 800.0,
+        "continuous_loss_window": 40,
+        "continuous_loss_threshold_pre_lap": -40.0,
+        "continuous_loss_threshold_post_lap": -25.0,
+        "min_score_kill": 0,
+        "wrong_way_penalty": 12.0,
+        "wrong_way_threshold": 0.0,
+        "near_wall_penalty": 4.0,
+        "slow_weight_post_lap": 4.0,
+        "aggravator_per_lap": 2.0,
+        "initial_slow_threshold": 0.2,
+        "slow_threshold_increment": 0.05
+    },
+    "visualization": {
+        "show_sensors": false
+    },
+    "cards": {
+        "wspace": 0.15,
+        "graph_size": 1.7,
+        "info_size": 0.72,
+        "commands_size": 0.63,
+        "events_size": 0.8,
+        "neural_network_size": 1.0
+    },
+    "ui_colors": {
+        "white": "#e8ecf1",
+        "black": "#0a0d12",
+        "green": "#7BFF00",
+        "yellow": "#c9a84c",
+        "red": "#FD2C2C",
+        "inactive_gray": "#2e3a47",
+        "medium_gray": "#5a6a7a",
+        "primary_text": "#dce3ea",
+        "secondary_text": "#8fa0b0",
+        "tertiary_text": "#8fa0b0",
+        "grass_color": "#0d1520",
+        "asphalt_color": "#243040",
+        "card_color": "#272B30",
+        "dead_scatter_color": "#FD2C2C",
+        "normal_color": "#488E97",
+        "best_color": "#7BFF00",
+        "checkpoint_color": "#c9a84c",
+        "sensor_colors": [
+            "#c05c5c",
+            "#c9a84c",
+            "#4db389"
+        ],
+        "editor_background": "#0d1520",
+        "editor_grass": "#0d1520",
+        "editor_tick": "#5a6a7a",
+        "btn_save": "#8fa0b0",
+        "btn_save_hover": "#7BFF00",
+        "btn_undo": "#8fa0b0",
+        "btn_undo_hover": "#FD2C2C",
+        "btn_clear": "#8fa0b0",
+        "btn_clear_hover": "#FD2C2C",
+        "btn_slider": "#8fa0b0"
+    }
+}
