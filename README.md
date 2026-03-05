@@ -26,7 +26,7 @@ The simulation comes with a **live dashboard** (Matplotlib), an **interactive tr
 - **Sensor system** — 7 distance sensors at ±90°/±45°/±22.5°/0° plus speed, feeding directly into the network
 - **Interactive track editor** — Draw custom circuits with Catmull-Rom splines, set start/finish lines, adjust track width
 - **Responsive UI** — Layout and font sizes adapt automatically to the screen resolution
-- **Fully configurable** — All physics, rewards, penalties, and population parameters live in `config.json`
+- **Fully configurable** — All physics, rewards, penalties, and population parameters live in `setting.json`
 
 ---
 
